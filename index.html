@@ -1,18 +1,228 @@
-<!DOCTYPE html>
 
+
+
+<!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  <title>my-first-website</title>
-  <LINK href="styles.css" rel="stylesheet" type="text/css">
+<title>Geo Start - Maine Geo</title>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta name="referrer" content="origin">
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/favicon-apple.png"/>
+
+<!-- jQuery first, then Tether, then Bootstrap JS. -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script> 
+
+<!-- BOOTSTRAP SELECT -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
+
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- BOOTSTRAP SELECT -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+
+<link rel = "stylesheet" type = "text/css" href = "css/styles.css?v=2.2">
+
 </head>
 
 <body>
 
-<img src="https://octodex.github.com/images/daftpunktocat-thomas.gif" id="octocat" alt="octocat-gif" />
+<div class = "container mt-5">
+	<div class = "row">
+        <div class = "col-md-2"></div>
+    
+        <div class = "col-md-8 p-4" id = "Digital Maine Library">
+        
+        	<div id = "header" class = "text-center">
+        		<img class = "img img-fluid" src="assets/marvel.png" alt="Digital Maine Library">
+        	</div>
+            
+        	<h2 class = "my-4">No matter where you are in Maine, you're always at the library!</h2>
+        
+            <p><strong>Maine State Library</strong> is committed to protecting customer privacy and does not share or store any personal information. To provide customers with the best experience Gale, a part of Cengage, the vendor facilitating geolocation access for all <em>Digital Maine Library</em> e-resources, asks to access your current location.</p>
+                
+            <div class = "text-center mt-4">
+                <a id = "geo-yes" class = "btn btn-lg btn-primary text-white">Use my Location</a>
+            </div>
+            <div class = "text-center">
+                <a id = "geo-no">Do not use my Location</a>
+            </div>
+            
+            <div id = "geo-message">
+                <!-- THIS IS WHERE THE waiting to auth MESSAGE APPEARS -->
+            </div>
+            
+            <div class = "mt-4 text-center">
+            	<p style = "font-size:13px;">Gale's privacy policy is available at <a target = "_blank" href = "https://www.gale.com/privacy-statement-editorial">https://www.Cengage.Com/Privacy</a>.</p>
+    		</div>
+            
+            
+        </div> <!-- col -->
+        <div class = "col-md-2"></div>
+    </div>
+</div> <!-- container -->
 
-<!-- Change this code here by copy and pasting your template on line 15 -->
-<p>Welcome to your first GitHub Pages website!</p>
+<script>
+$( document ).ready(function() {
+	
+	/* fallback for "not now" */
+	//setTimeout(getMaxmind, 8000);
+
+	// INITIATED BY BUTTONS
+	$("#geo-yes").click(function() {
+		// TRY MAXMIND
+		$("#geo-message").addClass("alert alert-primary mt-4");
+		$("#geo-message").html("<i class = 'fa fa-spin fa-spinner'></i> Authentication using your HTML5 Geolocation");
+		tryHTML5();	
+	});
+	
+	// INITIATED BY BUTTONS
+	$("#geo-no").click(function() {
+		// TRY MAXMIND
+		$("#geo-message").addClass("alert alert-secondary mt-4");
+		$("#geo-message").html("<i class = 'fa fa-spin fa-spinner'></i> Authentication using your IP");
+		getMaxmind();	
+	});
+	
+	// GEO SCRIPTS
+	function tryHTML5() {
+	
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(getGoogle,getMaxmind);
+		} else {
+			// NOT SUPPORTED BY BROWSER.  TRY LOCAL (MAXMIND) IP
+			getMaxmind();
+		}
+	} // END GEO
+		
+	function getGoogle(position) {
+		
+		// SEND TO GOOGLEAPI
+
+		var lat = position.coords.latitude;
+		var long = position.coords.longitude;
+		var alt = position.coords.altitude;
+
+		// GET ZIP FROM GEO MAPS
+		var url = "geo/google.php?lat=" + lat + "&long=" + long;
+	
+		$.get( url, function( data ) {
+			
+			data = $.trim(data);
+	
+			var arr_data = data.split("|");
+			
+			status = arr_data[0];
+			ip = arr_data[1];
+			country = arr_data[2];
+			state = arr_data[3];
+			city = arr_data[4];
+			zip = arr_data[5];
+			long = arr_data[6];
+			lat = arr_data[7];
+			
+			type = "html5";
+				
+			// SAVE TO SESSION
+			createSesssion(status,ip,country,state,city,zip,long,lat,type);
+		 
+		});
+		
+	}
+	
+	function getMaxmind() {
+		
+		//navigator.close;
+		
+		// CHECK LOCAL DATABASES, THEN MAXMIND
+					
+		var url = "geo/maxmind.php";
+		
+		$.get( url, function( data ) {
+			
+			data = $.trim(data);
+
+			var arr_data = data.split("|");
+			
+			status = arr_data[0];
+			ip = arr_data[1];
+			city = arr_data[2];
+			state = arr_data[3];		
+			zip = arr_data[4];
+			country = arr_data[5];
+			long = arr_data[6];
+			lat = arr_data[7];
+			
+			type = "maxmind";
+
+			// SAVE SESSION
+			createSesssion(status,ip,country,state,city,zip,long,lat,type);
+			
+		});
+		
+	}
+	
+	// SEND RESULTS TO PROXY PAGE
+	function createSesssion(status,ip,country,state,city,zip,long,lat,type) {
+		
+		//navigator.close;	
+		status = $.trim(status);
+		ip = $.trim(ip);
+		country = $.trim(country);
+		state = $.trim(state);
+		city = $.trim(city);
+		zip = $.trim(zip);
+		long = $.trim(long);
+		lat = $.trim(lat);
+		
+		// SAVE DATA TO SESSION
+		var url = "geo/save.php?status=" + status + "&country=" + country + "&state=" + state + "&city=" + city + "&zip=" + zip + "&lat=" + lat + "&long=" + long + "&type=" + type;
+		$.get( url, function( data ) {
+			data = $.trim(data);
+		})
+		
+		// FINALLY -- SEND TO PROXY
+		sendToAuth(status);
+		
+	} // getGeoLocal
+	
+	function sendToAuth(status) {
+	
+		// ADD PARAMS AND SEND ALONG
+		url = "auth.php?status=" + status + "&loc=cape11235&db=MSIC&isbn=&journal=&link=";
+				
+		// BUILD URL and SEND ALONG
+		window.location.href = url;
+
+	}
+
+});
+
+</script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-116620766-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-116620766-2');
+</script>
+
 
 </body>
+
 </html>
